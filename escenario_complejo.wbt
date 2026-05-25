@@ -1,0 +1,284 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/gctronic/e-puck/protos/E-puck.proto"
+
+WorldInfo {
+  info [
+    "ICI 4150 - Laboratorio 2"
+    "Escenario 2: Laberinto con pasillos estrechos"
+    "PUCV - Robotica y Sistemas Autonomos 2026-01"
+  ]
+  title "Lab2 - Escenario Complejo (Laberinto)"
+}
+Viewpoint {
+  orientation -0.27342131643422757 0.2546025058525749 0.9275873801065664 1.7167539510713428
+  position 0.5551401437582397 -3.684593472371288 2.8322961591779894
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 3 3
+  wallThickness 0.02
+  wallHeight 0.15
+}
+E-puck {
+  hidden position_0_0 429.9340538813606
+  hidden position_0_1 145.02310251204847
+  hidden linearVelocity_0 1.333533641971262e-05 0.00010607346767854224 -1.4790746197134888e-07
+  hidden angularVelocity_0 -0.0040282491952369276 0.0012040071268238101 -1.2745825656399776
+  hidden rotation_1 0 0.9999999999999999 0 2.677452993148745
+  hidden linearVelocity_1 0.009357276332221238 0.03205249541643835 2.6726997578868144e-08
+  hidden angularVelocity_1 -1.731645825658187 0.5076481707247875 -1.2843700588194638
+  hidden rotation_2 0 -1 0 5.773344860261608
+  hidden linearVelocity_2 -0.009309331825370007 -0.031801822052640316 1.4391811674178987e-08
+  hidden angularVelocity_2 1.723583401437201 -0.5052632516829612 -1.2842450939893661
+  translation 0.2292990562019808 -0.38030646676809365 -7.524060304988332e-05
+  rotation -0.0004203421424952306 0.0005483577326279081 0.9999997613081117 1.2636871908507026
+  controller "my_controller2"
+}
+Solid {
+  translation -0.75 0.7 0.075
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.38 0.33 0.28
+        roughness 0.9
+        metalness 0
+      }
+      geometry Box {
+        size 1.1 0.05 0.15
+      }
+    }
+  ]
+  name "muro_h1"
+  boundingObject Box {
+    size 1.1 0.05 0.15
+  }
+}
+Solid {
+  translation -0.15 0 0.075
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.38 0.33 0.28
+        roughness 0.9
+        metalness 0
+      }
+      geometry Box {
+        size 0.9 0.05 0.15
+      }
+    }
+  ]
+  name "muro_h3"
+  boundingObject Box {
+    size 0.9 0.05 0.15
+  }
+}
+Solid {
+  translation 0.75 -0.7 0.075
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.38 0.33 0.28
+        roughness 0.9
+        metalness 0
+      }
+      geometry Box {
+        size 1.1 0.05 0.15
+      }
+    }
+  ]
+  name "muro_h2"
+  boundingObject Box {
+    size 1.1 0.05 0.15
+  }
+}
+Solid {
+  translation -1.25 0.35 0.075
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.38 0.33 0.28
+        roughness 0.9
+        metalness 0
+      }
+      geometry Box {
+        size 0.05 0.75 0.15
+      }
+    }
+  ]
+  name "muro_v1"
+  boundingObject Box {
+    size 0.05 0.75 0.15
+  }
+}
+Solid {
+  translation 1.25 -0.35 0.075
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.38 0.33 0.28
+        roughness 0.9
+        metalness 0
+      }
+      geometry Box {
+        size 0.05 0.75 0.15
+      }
+    }
+  ]
+  name "muro_v2"
+  boundingObject Box {
+    size 0.05 0.75 0.15
+  }
+}
+Solid {
+  translation 0.4 0.35 0.075
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.38 0.33 0.28
+        roughness 0.9
+        metalness 0
+      }
+      geometry Box {
+        size 0.05 0.75 0.15
+      }
+    }
+  ]
+  name "muro_v3"
+  boundingObject Box {
+    size 0.05 0.75 0.15
+  }
+}
+Solid {
+  translation -0.4 -0.35 0.075
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.38 0.33 0.28
+        roughness 0.9
+        metalness 0
+      }
+      geometry Box {
+        size 0.05 0.75 0.15
+      }
+    }
+  ]
+  name "muro_v4"
+  boundingObject Box {
+    size 0.05 0.75 0.15
+  }
+}
+Solid {
+  translation -0.88 1.05 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.85 0.25 0.1
+        roughness 0.6
+      }
+      geometry Box {
+        size 0.1 0.1 0.1
+      }
+    }
+  ]
+  name "caja_1"
+  boundingObject Box {
+    size 0.1 0.1 0.1
+  }
+}
+Solid {
+  translation 0.12 0.22 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.9 0.5 0.1
+        roughness 0.6
+      }
+      geometry Box {
+        size 0.09 0.09 0.1
+      }
+    }
+  ]
+  name "caja_2"
+  boundingObject Box {
+    size 0.09 0.09 0.1
+  }
+}
+Solid {
+  translation 0.9 -1.05 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.15 0.45 0.85
+        roughness 0.6
+      }
+      geometry Box {
+        size 0.1 0.1 0.1
+      }
+    }
+  ]
+  name "caja_3"
+  boundingObject Box {
+    size 0.1 0.1 0.1
+  }
+}
+Solid {
+  translation 1.1 1.1 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.2 0.75 0.3
+        roughness 0.6
+      }
+      geometry Box {
+        size 0.13 0.13 0.1
+      }
+    }
+  ]
+  name "caja_4"
+  boundingObject Box {
+    size 0.13 0.13 0.1
+  }
+}
+Solid {
+  translation -0.05 -0.68 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.9 0.85 0.1
+        roughness 0.6
+      }
+      geometry Box {
+        size 0.09 0.09 0.1
+      }
+    }
+  ]
+  name "caja_5"
+  boundingObject Box {
+    size 0.09 0.09 0.1
+  }
+}
+Solid {
+  translation -1.1 -0.3 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.6 0.6 0.6
+        roughness 0.7
+      }
+      geometry Box {
+        size 0.11 0.11 0.1
+      }
+    }
+  ]
+  name "caja_6"
+  boundingObject Box {
+    size 0.11 0.11 0.1
+  }
+}

@@ -1,0 +1,95 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/gctronic/e-puck/protos/E-puck.proto"
+
+WorldInfo {
+  info [
+    "ICI 4150 - Laboratorio 2"
+    "Escenario 1: Entorno Simple"
+    "PUCV - Robotica y Sistemas Autonomos 2026-01"
+  ]
+  title "Lab2 - Escenario Simple"
+}
+Viewpoint {
+  orientation 0.1766003652423643 -0.5632990739547846 -0.807159503616197 5.542230480466863
+  position -2.1855913200356127 -0.9647692792027536 1.4379494510875104
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 2 2
+}
+E-puck {
+  hidden position_0_0 133.24973504975608
+  hidden position_0_1 -94.29439779666512
+  hidden linearVelocity_0 -5.893296309614759e-10 -6.193071485893007e-06 -1.5467199527081626e-08
+  hidden angularVelocity_0 -1.820504077192322e-08 -1.8552345345284575e-07 -1.7828085131644136
+  hidden rotation_1 0 -1 0 4.980341708194819
+  hidden linearVelocity_1 0.012584030412259922 0.04494140045189929 1.1862252238261772e-07
+  hidden angularVelocity_1 -2.4067500306693854 0.679185843490436 -1.8071166133963499
+  hidden rotation_2 0 0.9999999999999999 0 6.236567118208256
+  hidden linearVelocity_2 -0.012584032625793985 -0.04495378709830672 1.281732653346369e-07
+  hidden angularVelocity_2 2.406749993327657 -0.679186212405404 -1.807116773082684
+  translation 0.39042528875214905 0.00011304098778294127 -0.00010154985646999848
+  rotation -9.832950489365655e-09 -2.030481036641673e-08 -0.9999999999999999 -1.2631692353287525
+  controller "my_controller2"
+}
+Solid {
+  translation 0.5 0.3 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.8 0.2 0.2
+        roughness 0.5
+      }
+      geometry Box {
+        size 0.15 0.15 0.1
+      }
+    }
+  ]
+  name "obstaculo_1"
+  boundingObject Box {
+    size 0.15 0.15 0.1
+  }
+}
+Solid {
+  translation -0.4 0.5 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.2 0.5 0.8
+        roughness 0.5
+      }
+      geometry Box {
+        size 0.15 0.15 0.1
+      }
+    }
+  ]
+  name "obstaculo_2"
+  boundingObject Box {
+    size 0.15 0.15 0.1
+  }
+}
+Solid {
+  translation 0.1 -0.55 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.2 0.8 0.3
+        roughness 0.5
+      }
+      geometry Box {
+        size 0.15 0.15 0.1
+      }
+    }
+  ]
+  name "obstaculo_3"
+  boundingObject Box {
+    size 0.15 0.15 0.1
+  }
+}
