@@ -1,0 +1,290 @@
+from controller import Robot
+import csv
+
+# =========================================================
+# ICI 4150 - Laboratorio 2 | PUCV
+# Controlador: Navegación Reactiva Avanzada + Filtro de Kalman
+# V9: Sintonía Agresiva Kalman + Campo Visual Ampliado
+# =========================================================
+
+robot = Robot()
+
+# =========================================================
+# DETECCIÓN DE ESCENARIO
+# =========================================================
+world_title = robot.getWorldPath()
+if "complejo" in world_title.lower() or "laberinto" in world_title.lower():
+    ESCENARIO = "escenario2_laberinto"
+else:
+    ESCENARIO = "escenario1_simple"
+
+print(f"[INFO] Escenario detectado: {ESCENARIO}")
+
+# =========================================================
+# CONFIGURACIÓN DE MUESTREO
+# =========================================================
+timestep = int(robot.getBasicTimeStep())  
+Ts = timestep / 1000.0                    
+fs = 1.0 / Ts                             
+
+print(f"[INFO] Ts = {Ts:.4f} s | fs = {fs:.2f} Hz")
+
+# =========================================================
+# MOTORES Y ENCODERS
+# =========================================================
+left_motor  = robot.getDevice('left wheel motor')
+right_motor = robot.getDevice('right wheel motor')
+left_motor.setPosition(float('inf'))
+right_motor.setPosition(float('inf'))
+left_motor.setVelocity(0.0)
+right_motor.setVelocity(0.0)
+
+left_encoder  = robot.getDevice('left wheel sensor')
+right_encoder = robot.getDevice('right wheel sensor')
+left_encoder.enable(timestep)
+right_encoder.enable(timestep)
+
+# =========================================================
+# SENSORES DE PROXIMIDAD
+# =========================================================
+ds_front_L = robot.getDevice('ps7')
+ds_front_R = robot.getDevice('ps0')
+ds_diag_L  = robot.getDevice('ps6')
+ds_diag_R  = robot.getDevice('ps1')
+ds_lat_L   = robot.getDevice('ps5')
+ds_lat_R   = robot.getDevice('ps2')
+
+for ds in [ds_front_L, ds_front_R, ds_diag_L, ds_diag_R, ds_lat_L, ds_lat_R]:
+    ds.enable(timestep)
+
+# =========================================================
+# PARÁMETROS FÍSICOS Y FILTROS
+# =========================================================
+R_RUEDA = 0.0205  
+
+ALFA = 0.2
+z_k_filtrado = 0.0
+
+prox_estimada = 0.0
+P   = 1.0
+Q   = 0.05
+R_k = 0.8
+
+# =========================================================
+# PARÁMETROS DE NAVEGACIÓN
+# =========================================================
+VEL_CRUCERO    = 5.0
+VEL_GIRO       = 2.5
+UMBRAL_CRITICO = 80.0
+UMBRAL_SALIDA  = 30.0
+
+if ESCENARIO == "escenario2_laberinto":
+    UMBRAL_CRITICO = 85.0  # Reacciona antes del contacto
+    UMBRAL_SALIDA  = 75.0  # Histéresis segura
+    # FIX: Sintonía agresiva de Kalman para eliminar latencia
+    Q              = 2.0   
+    R_k            = 0.2   
+    VEL_CRUCERO    = 3.5
+    VEL_GIRO       = 2.0
+    print("[INFO] Parámetros optimizados para laberinto")
+
+# =========================================================
+# MÁQUINA DE ESTADOS Y DEADLOCK PREVENTIONS
+# =========================================================
+estado_girando  = False
+girar_derecha   = True
+prev_enc_L      = 0.0
+prev_enc_R      = 0.0
+
+contador_giro   = 0
+UMBRAL_ATASCO   = int(4.0 / Ts)   
+
+# Variables de Escape y Empuje 
+estado_escape   = False
+contador_escape = 0
+DURACION_ESCAPE_CIEGO  = int(1.8 / Ts)  
+DURACION_ESCAPE_MAXIMA = int(3.5 / Ts)  
+
+estado_empuje   = False
+contador_empuje = 0
+DURACION_EMPUJE = int(0.5 / Ts)  
+
+# =========================================================
+# REGISTRO DE SEÑALES
+# =========================================================
+raw_data, filtered_data, kalman_data, enc_adv_data, kgain_data, time_data, estado_data = [], [], [], [], [], [], []
+sim_time = 0.0
+
+print("[INFO] Iniciando loop de simulación...")
+
+# =========================================================
+# LOOP PRINCIPAL
+# =========================================================
+while robot.step(timestep) != -1:
+
+    # --------------------------------------------------
+    # 1. ODOMETRÍA
+    # --------------------------------------------------
+    curr_enc_L = left_encoder.getValue()
+    curr_enc_R = right_encoder.getValue()
+    delta_L    = curr_enc_L - prev_enc_L
+    delta_R    = curr_enc_R - prev_enc_R
+    prev_enc_L, prev_enc_R = curr_enc_L, curr_enc_R
+
+    ds_lineal = R_RUEDA * (delta_L + delta_R) / 2.0
+
+    # --------------------------------------------------
+    # 2. MEDICIÓN Y FILTROS
+    # --------------------------------------------------
+    # FIX: Campo visual ampliado y función MAX
+    z_k_raw = max(
+        ds_front_L.getValue(), 
+        ds_front_R.getValue(),
+        ds_diag_L.getValue() * 0.7,
+        ds_diag_R.getValue() * 0.7
+    )
+    
+    z_k_filtrado = ALFA * z_k_filtrado + (1.0 - ALFA) * z_k_raw
+
+    # Kalman (Congelado si el robot no está avanzando recto)
+    if estado_girando or estado_escape or estado_empuje:
+        prox_predicha = prox_estimada
+    else:
+        prox_predicha = prox_estimada + (ds_lineal * 1000.0)
+
+    P_predicha    = P + Q
+    prox_predicha = max(0.0, prox_predicha)
+
+    K             = P_predicha / (P_predicha + R_k)
+    prox_estimada = prox_predicha + K * (z_k_filtrado - prox_predicha)
+    P             = (1.0 - K) * P_predicha
+    prox_estimada = max(0.0, prox_estimada)
+
+    # --------------------------------------------------
+    # 3. REGISTRO
+    # --------------------------------------------------
+    raw_data.append(z_k_raw)
+    filtered_data.append(z_k_filtrado)
+    kalman_data.append(prox_estimada)
+    enc_adv_data.append(0.0 if (estado_girando or estado_escape) else (ds_lineal * 1000.0))
+    kgain_data.append(K)
+    time_data.append(sim_time)
+    estado_data.append(1 if (estado_girando or estado_escape or estado_empuje) else 0)
+    sim_time += Ts
+
+    # --------------------------------------------------
+    # 4. MÁQUINA DE ESTADOS REACTIVA (V9)
+    # --------------------------------------------------
+    presion_izq = ds_lat_L.getValue() + ds_diag_L.getValue()
+    presion_der = ds_lat_R.getValue() + ds_diag_R.getValue()
+
+    # ── ESTADO 3: EMPUJE CIEGO (Resolución de Deadlock con Salvaguarda) ──
+    if estado_empuje:
+        contador_empuje += 1
+        
+        # SALVAGUARDA: Abortar si detecta pared frontalmente
+        if prox_estimada > UMBRAL_CRITICO:
+            estado_empuje  = False
+            estado_girando = True
+            contador_giro  = 0
+            vl, vr = (VEL_GIRO, -VEL_GIRO) if girar_derecha else (-VEL_GIRO, VEL_GIRO)
+            print(f"[t={sim_time:.2f}s] Pared detectada durante empuje. Abortando colisión y retomando giro.")
+        else:
+            vl, vr = VEL_CRUCERO, VEL_CRUCERO
+            if contador_empuje > DURACION_EMPUJE:
+                estado_empuje  = False
+                estado_girando = False
+                contador_giro  = 0
+                print(f"[t={sim_time:.2f}s] Empuje finalizado. Evaluando entorno.")
+
+    # ── ESTADO 2: ESCAPE CIEGO ───────────────────────────
+    elif estado_escape:
+        contador_escape += 1
+        vl, vr = (VEL_GIRO * 1.5, -VEL_GIRO * 1.5) if girar_derecha else (-VEL_GIRO * 1.5, VEL_GIRO * 1.5)
+
+        if contador_escape > DURACION_ESCAPE_MAXIMA:
+            estado_escape   = False
+            estado_empuje   = True
+            contador_empuje = 0
+            vl, vr          = VEL_CRUCERO, VEL_CRUCERO
+            print(f"[t={sim_time:.2f}s] Límite de escape alcanzado. Forzando empuje exploratorio.")
+            
+        elif contador_escape > DURACION_ESCAPE_CIEGO and prox_estimada < UMBRAL_SALIDA:
+            estado_escape  = False
+            estado_girando = False
+            contador_giro  = 0
+            vl, vr         = VEL_CRUCERO, VEL_CRUCERO
+            print(f"[t={sim_time:.2f}s] Escape completado. Retomando rumbo.")
+
+    # ── ESTADO 1: GIRO NORMAL ────────────────────────────
+    elif estado_girando:
+        contador_giro += 1
+
+        if contador_giro > UMBRAL_ATASCO:
+            estado_escape   = True
+            contador_escape = 0
+            vl, vr = (VEL_GIRO * 1.5, -VEL_GIRO * 1.5) if girar_derecha else (-VEL_GIRO * 1.5, VEL_GIRO * 1.5)
+            print(f"[t={sim_time:.2f}s] ATASCO detectado. Iniciando escape ciego.")
+
+        elif prox_estimada < UMBRAL_SALIDA:
+            estado_girando = False
+            contador_giro  = 0
+            vl, vr         = VEL_CRUCERO, VEL_CRUCERO
+            print(f"[t={sim_time:.2f}s] Camino libre | prox={prox_estimada:.1f} | Avanzando")
+
+        else:
+            vl, vr = (VEL_GIRO, -VEL_GIRO) if girar_derecha else (-VEL_GIRO, VEL_GIRO)
+
+    # ── ESTADO 0: AVANCE CRUCERO ─────────────────────────
+    else:
+        if prox_estimada > UMBRAL_CRITICO:
+            estado_girando = True
+            contador_giro  = 0
+            
+            # Decisión de dirección única y bloqueada al inicio del giro
+            MARGEN_EMPATE = 15.0
+            if abs(presion_izq - presion_der) < MARGEN_EMPATE:
+                girar_derecha = ds_front_L.getValue() >= ds_front_R.getValue()
+            else:
+                girar_derecha = presion_izq >= presion_der
+
+            vl, vr = (VEL_GIRO, -VEL_GIRO) if girar_derecha else (-VEL_GIRO, VEL_GIRO)
+            direccion = "derecha" if girar_derecha else "izquierda"
+            print(f"[t={sim_time:.2f}s] Obstáculo detectado | prox={prox_estimada:.1f} | Giro bloqueado hacia {direccion}")
+        else:
+            vl, vr = VEL_CRUCERO, VEL_CRUCERO
+
+    left_motor.setVelocity(vl)
+    right_motor.setVelocity(vr)
+
+# =========================================================
+# EXPORTACIÓN CSV
+# =========================================================
+csv_nombre = f"datos_{ESCENARIO}.csv"
+
+with open(csv_nombre, 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow([
+        'tiempo_s', 'raw', 'filtrado_exp', 'kalman',
+        'avance_enc_uds', 'ganancia_K', 'estado_giro'
+    ])
+    for i in range(len(time_data)):
+        writer.writerow([
+            round(time_data[i],     4),
+            round(raw_data[i],      2),
+            round(filtered_data[i], 2),
+            round(kalman_data[i],   2),
+            round(enc_adv_data[i],  4),
+            round(kgain_data[i],    4),
+            estado_data[i]
+        ])
+
+n     = len(time_data)
+giros = sum(1 for i in range(1, n) if estado_data[i] == 1 and estado_data[i-1] == 0)
+
+print(f"\n[FIN] Ejecución finalizada.")
+print(f"  Escenario     : {ESCENARIO}")
+print(f"  Duración      : {time_data[-1]:.2f} s" if n > 0 else "  Sin datos")
+print(f"  Muestras      : {n}")
+print(f"  Giros totales : {giros}")
+print(f"  CSV guardado  : {csv_nombre}")
